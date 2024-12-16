@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt Race - 1 Player</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Body and Background */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to top, #98D37E, #C1E2A6);
+        }
+
+        /* Tablet Background Image */
+        .tablet-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('bg2.jpg'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            z-index: -1; /* Ensures it stays behind other content */
+            border-radius: 38px; /* Matches the inner tablet curve */
+        }
+
+        /* Tablet Container */
+        .tablet {
+            width: 400px;
+            height: 680px;
+            border: 12px solid #333;
+            border-radius: 50px; /* Rounded corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5),
+                        inset 0 5px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Simulated Camera (Top Center) */
+        .camera {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #555;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header Section */
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* High Score and Timer */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .top-bar .high-score, .top-bar .timer {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Encrypted Message */
+        .encrypted-message {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        /* Score Section */
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Input Field and Submit Button */
+        .input-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 30px;
+        }
+
+        .input-section input {
+            width: 70%;
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #FFAE42;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .input-section button {
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #FFAE42;
+            border: 2px solid #E68A00;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .input-section button:hover {
+            background: #E68A00;
+        }
+
+        /* Feedback Section */
+        .feedback {
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: green;
+        }
+
+        .feedback.incorrect {
+            color: red;
+        }
+
+        /* Hint Section with Cloud Style */
+        .hint {
+            display: none;
+            font-size: 16px;
+            color: #555;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF;
+            border-radius: 15px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        .hint:before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px;
+            border-style: solid;
+            border-color: #FFF transparent transparent transparent;
+        }
+
+        /* Hint Icon (Top of Submit Button) */
+        .hint-icon {
+            position: absolute;
+            right: 20px;
+            top: 170px; /* Positioned above the submit button */
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .hint-icon:hover {
+            color: #E68A00;
+        }
+
+        /* Bottom Bezel (Fake Button Indicator) */
+        .bezel-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 5px;
+            background: #555;
+            border-radius: 5px;
+        }
+
+        /* Center Bottom Section (Back, Restart Buttons) */
+        .bottom-bar {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .bottom-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .bottom-btn:hover {
+            color: #E68A00;
+        }
+
+        /* Encrypted Message Title */
+        .message-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tablet Container -->
+    <div class="tablet">
+
+        <!-- Background Image -->
+    <div class="tablet-background"></div>
+
+        <!-- Camera -->
+        <div class="camera"></div>
+
+        <!-- High Score and Timer -->
+        <div class="top-bar">
+            <div class="high-score" id="highScore">🏆 High Score: 0</div>
+            <div class="timer">⏳ <span id="timer">20</span>s</div>
+        </div>
+
+        <!-- Score Section -->
+        <div class="score" id="score">🏁 Score: 0</div>
+
+        <!-- Encrypted Message -->
+        <div class="message-title">ENCRYPTED MESSAGE</div>
+        <div class="encrypted-message" id="encryptedMessage">
+            E000
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <input type="text" id="userInput" placeholder="Enter your decoded answer">
+            <button id="submitBtn">Submit</button>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="feedback" id="feedback"></div>
+
+        <!-- Hint Icon and Hint -->
+        <div class="hint-icon" id="hintIcon">💡</div>
+        <div class="hint" id="hintMessage">
+            It's a circle often used in sports. (_ _ L)
+        </div>
+
+        <!-- Bottom Bezel -->
+        <div class="bezel-bottom"></div>
+
+        <!-- Center Bottom Section -->
+        <div class="bottom-bar">
+            <!-- Back and Restart Buttons -->
+            <div class="bottom-btn" id="backBtn" onclick="window.location.href='home.html'">⬅</div>
+            <div class="bottom-btn" id="restartBtn" onclick="restartGame()">🔄</div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const userInput = document.getElementById('userInput');
+        const feedback = document.getElementById('feedback');
+        const hintIcon = document.getElementById('hintIcon');
+        const hintMessage = document.getElementById('hintMessage');
+        const encryptedMessage = document.getElementById('encryptedMessage');
+        const highScoreElement = document.getElementById('highScore');
+        const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
+
+        // New Encrypted Messages and Decoded Answers
+        const messages = [
+            { 
+                message: "FDHVDU", 
+                answer: "CAESAR", 
+                hint: "A famous cipher.\nC_ _ _ _ _" 
+            },
+            { 
+                message: "WHDFK", 
+                answer: "TEACH", 
+                hint: "What teachers do.\n_ E_ _ H" 
+            },
+            { 
+                message: "GRJ", 
+                answer: "DOG", 
+                hint: "A loyal animal.\n_ O _" 
+            },
+            { 
+                message: "KDSSB", 
+                answer: "HAPPY", 
+                hint: "A cheerful feeling.\nH_ _ _ Y" 
+            },
+            { 
+                message: "VWRUP", 
+                answer: "STORM", 
+                hint: "Heavy rain with thunder.\n_ T_ _ M" 
+            },
+            { 
+                message: "SODQH", 
+                answer: "PLANE", 
+                hint: "Flies in the sky.\nP_ _ _ E" 
+            },
+            { 
+                message: "FKDLU", 
+                answer: "CHAIR", 
+                hint: "You sit on it.\nC_ _ _ _" 
+            },
+            { 
+                message: "ERRN", 
+                answer: "BOOK", 
+                hint: "You read it.\n_ _ O _" 
+            },
+            { 
+                message: "VKLS", 
+                answer: "SHIP", 
+                hint: "Travels on water.\n_ _ I P" 
+            },
+            { 
+                message: "OLRQ", 
+                answer: "LION", 
+                hint: "The king of the jungle.\n_ I _ _" 
+            },
+            { 
+                message: "EUHDG", 
+                answer: "BREAD", 
+                hint: "A common breakfast item.\n_ R _ _ D" 
+            },
+            { 
+                message: "FDQG\y", 
+                answer: "CANDY", 
+                hint: "A sweet treat.\nC_ _ _ Y" 
+            },
+            { 
+                message: "QDWXUH", 
+                answer: "NATURE", 
+                hint: "The outdoors and wildlife.\nN_ _ _ _ E" 
+            },
+            { 
+                message: "FRGH", 
+                answer: "CODE", 
+                hint: "A programmer writes this.\nC_ _ E" 
+            },
+            { 
+                message: "FDU", 
+                answer: "CAR", 
+                hint: "A four-wheeled vehicle.\nC _ _" 
+            },
+            { 
+                message: "FLQG", 
+                answer: "KING", 
+                hint: "A royal leader.\n_ I _ _" 
+            },
+            { 
+                message: "KHDUW", 
+                answer: "HEART", 
+                hint: "Pumps blood in your body.\n_ E_ _ T" 
+            },
+            { 
+                message: "DQLPDO", 
+                answer: "ANIMAL", 
+                hint: "Cats, dogs, and lions, for example.\n_ N_ _ _ _" 
+            },
+            { 
+                message: "SDSHU", 
+                answer: "PAPER", 
+                hint: "Used for writing or printing.\n_ A_ _ R" 
+            },
+            { 
+                message: "WDEOH", 
+                answer: "TABLE", 
+                hint: "You dine on it.\nT_ _ _ E" 
+            },
+            { 
+                message: "SRLQW", 
+                answer: "POINT", 
+                hint: "A dot or marker.\n_ _ I_ T" 
+            },
+            { 
+                message: "FORFN", 
+                answer: "CLOCK", 
+                hint: "It tells the time.\nC _ _ _ _" 
+            },
+            { 
+                message: "BRX", 
+                answer: "YOU", 
+                hint: "Refers to the person reading this.\n_ O _" 
+            },
+            { 
+                message: "KRPH", 
+                answer: "HOME", 
+                hint: "A place to live.\nH _ _ E" 
+            },
+            { 
+                message: "WRRO", 
+                answer: "TOOL", 
+                hint: "Used for fixing or building things.\nT_ _ _" 
+            },
+            { 
+                message: "F\SKHU", 
+                answer: "CIPHER", 
+                hint: "A secret way of writing.\n_ I_ _ E_"
+            },
+            { 
+                message: "KDVWH", 
+                answer: "HASTE", 
+                hint: "Hurry or rush.\nH_ _ T_"
+            },
+            { 
+                message: "FRGHU", 
+                answer: "CODER", 
+                hint: "A programmer.\nC_ _ _ R" 
+            },
+            { 
+                message: "SULQWHU", 
+                answer: "PRINTER", 
+                hint: "Produces hard copies of documents.\nP_ _ _ T_ _ _" 
+            },
+            { 
+                message: "ZLQWHU", 
+                answer: "WINTER", 
+                hint: "The coldest season.\n_ I_ _ _ R" 
+            },
+            { 
+                message: "FLUFNLQJ", 
+                answer: "CLICKING", 
+                hint: "Pressing a button on a mouse.\nC_ _ C_ _ N_" 
+            },
+            { 
+                message: "JODVVHV", 
+                answer: "GLASSES", 
+                hint: "Worn to improve vision.\n_ L_ _ S_ _" 
+            },
+            { 
+                message: "MDFNHW", 
+                answer: "JACKET", 
+                hint: "Worn to keep warm.\n_ A_ _ _ T" 
+            },
+            { 
+                message: "WUXFN", 
+                answer: "TRUCK", 
+                hint: "A large vehicle for goods.\n_ R_ _ K" 
+            },
+            { 
+                message: "FRPSXWHU", 
+                answer: "COMPUTER", 
+                hint: "An essential tech device.\nC_ _ P_ T_ _ _" 
+            },
+            { 
+                message: "VLVWHP", 
+                answer: "SYSTEM", 
+                hint: "A structured framework or setup.\nS_ _ _ _ M" 
+            },
+            { 
+                message: "ZRUOG", 
+                answer: "WORLD", 
+                hint: "Our planet.\n_ O_ _ D" 
+            },
+            { 
+                message: "ELUGV", 
+                answer: "BIRDS", 
+                hint: "Animals that fly.\nB_ _ D_" 
+            },
+            { 
+                message: "OLJKW", 
+                answer: "LIGHT", 
+                hint: "Illuminates darkness.\nL_ _ H_" 
+            },
+            { 
+                message: "ULYHU", 
+                answer: "RIVER", 
+                hint: "A flowing body of water.\nR_ _ _ R" 
+            },
+            { 
+                message: "VWRQH", 
+                answer: "STONE", 
+                hint: "A small rock.\nS_ _ _ E" 
+            },
+            { 
+                message: "EULFN", 
+                answer: "BRICK", 
+                hint: "Used for building.\n_ R_ C_ " 
+            },
+            { 
+                message: "EODQNHW", 
+                answer: "BLANKET", 
+                hint: "Keeps you warm at night.\n_ L_ _ K_ _" 
+            },
+            { 
+                message: "PXVLQJ", 
+                answer: "MUSING", 
+                hint: "A deep thought or reflection.\n_ U_ _ N_"
+            },
+            { 
+                message: "TXHVWLRQ", 
+                answer: "QUESTION", 
+                hint: "What you ask to get an answer.\nQ_ _ S_ _ _ N" 
+            },
+            { 
+                message: "HQMR\V", 
+                answer: "ENJOYS", 
+                hint: "Takes pleasure in something.\n_ N_ _ _ S" 
+            },
+            { 
+                message: "FRQWUDVW", 
+                answer: "CONTRAST", 
+                hint: "Shows differences.\nC_ _ T_ _ S_" 
+            },
+            { 
+                message: "FRORUV", 
+                answer: "COLORS", 
+                hint: "Red, green, blue, etc.\nC_ _ _ R_" 
+            }
+        ];
+
+
+        let currentScore = 0;
+        let timer = 20;
+        let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0;
+        let timerInterval;
+
+        // Display High Score
+        highScoreElement.textContent = `🏆 High Score: ${highScore}`;
+
+        // Timer Countdown
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timer > 0) {
+                    timer--;
+                    timerElement.textContent = timer;
+                } else {
+                    clearInterval(timerInterval);
+                    feedback.textContent = 'Time’s up! Game Over.';
+                    feedback.classList.add('incorrect');
+                    submitBtn.disabled = true;
+                }
+            }, 1000);
+        }
+
+        // Initialize the timer
+        startTimer();
+
+        // Randomly choose an encrypted message
+        function randomMessage() {
+            const index = Math.floor(Math.random() * messages.length);
+            encryptedMessage.textContent = messages[index].message;
+            hintMessage.textContent = messages[index].hint;
+            return messages[index];
+        }
+
+        let currentMessage = randomMessage();
+
+        let hintUsed = false; // Track if hint has been used
+
+// Submit Button Click
+submitBtn.addEventListener('click', () => {
+    const userAnswer = userInput.value.toUpperCase();
+    if (userAnswer === currentMessage.answer) {
+        feedback.textContent = 'Correct!';
+        feedback.classList.remove('incorrect');
+        feedback.style.color = 'green';
+        currentScore++;
+        scoreElement.textContent = `🏁 Score: ${currentScore}`;
+        if (currentScore > highScore) {
+            highScore = currentScore;
+            localStorage.setItem('highScore', highScore);
+            highScoreElement.textContent = `🏆 High Score: ${highScore}`;
+        }
+        timer = 20; // Reset timer
+        clearInterval(timerInterval);
+        startTimer();
+        currentMessage = randomMessage();
+
+        // Hide the hint for the next round
+        hintMessage.style.display = 'none';
+        hintUsed = false; // Reset hint usage tracker
+    } else {
+        feedback.textContent = 'Incorrect!';
+        feedback.classList.add('incorrect');
+    }
+    userInput.value = '';
+});
+
+// Hint Icon Click
+hintIcon.addEventListener('click', () => {
+    if (!hintUsed) { // Only show the hint if it hasn't been used yet
+        hintMessage.style.display = 'block';
+        hintUsed = true; // Mark hint as used
+    }
+});
+
+
+        // Restart Game
+function restartGame() {
+    currentScore = 0;
+    timer = 20;
+    scoreElement.textContent = `🏁 Score: 0`;
+    timerElement.textContent = `20`;
+    feedback.textContent = '';
+    submitBtn.disabled = false;
+    clearInterval(timerInterval);
+    startTimer();
+    currentMessage = randomMessage();
+    
+    // Hide the hint when restarting the game
+    hintMessage.style.display = 'none';
+}
+
+// Hint Icon Click
+hintIcon.addEventListener('click', () => {
+    // Make hint visible when the hint icon is clicked
+    hintMessage.style.display = 'block';
+});
+
+        
+        
+
+    </script>
+</body>
+</html>

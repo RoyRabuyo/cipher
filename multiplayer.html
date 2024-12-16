@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt Race - 2 Player</title>
+    <style>
+        /* Same styles as before */
+                /* General Reset */
+                * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Body and Background */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to top, #98D37E, #C1E2A6);
+        }
+
+        /* Tablet Background Image */
+        .tablet-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('bg2.jpg'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            z-index: -1; /* Ensures it stays behind other content */
+            border-radius: 38px; /* Matches the inner tablet curve */
+        }
+
+        /* Tablet Container */
+        .tablet {
+            width: 400px;
+            height: 680px;
+            border: 12px solid #333;
+            border-radius: 50px; /* Rounded corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5),
+                        inset 0 5px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            padding: 20px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Simulated Camera (Top Center) */
+        .camera {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #555;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header Section */
+        .header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* High Score and Timer */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .top-bar .high-score, .top-bar .timer {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Encrypted Message */
+        .encrypted-message {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #333;
+        }
+
+        /* Score Section */
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Input Field and Submit Button */
+        .input-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-top: 30px;
+        }
+
+        .input-section input {
+            width: 70%;
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #FFAE42;
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .input-section button {
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #FFAE42;
+            border: 2px solid #E68A00;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .input-section button:hover {
+            background: #E68A00;
+        }
+
+        /* Feedback Section */
+        .feedback {
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: green;
+        }
+
+        .feedback.incorrect {
+            color: red;
+        }
+
+        /* Hint Section with Cloud Style */
+        .hint {
+            display: none;
+            font-size: 16px;
+            color: #555;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #FFF;
+            border-radius: 15px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        .hint:before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px;
+            border-style: solid;
+            border-color: #FFF transparent transparent transparent;
+        }
+
+        /* Hint Icon (Top of Submit Button) */
+        .hint-icon {
+            position: absolute;
+            right: 20px;
+            top: 210px; /* Positioned above the submit button */
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .hint-icon:hover {
+            color: #E68A00;
+        }
+
+        /* Bottom Bezel (Fake Button Indicator) */
+        .bezel-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 5px;
+            background: #555;
+            border-radius: 5px;
+        }
+
+        /* Center Bottom Section (Back, Restart Buttons) */
+        .bottom-bar {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .bottom-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .bottom-btn:hover {
+            color: #E68A00;
+        }
+
+        /* Encrypted Message Title */
+        .message-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        #winnerMessage {
+            font-size: 2em;  /* Increase the font size */
+            font-weight: bold;  /* Make the text bold */
+            color: #4CAF50;  /* Change the color to green for a congratulatory effect */
+            background-color: #f0f0f0;  /* Light background for contrast */
+            padding: 20px;  /* Add some padding around the text */
+            text-align: center;  /* Center-align the text */
+            border-radius: 10px;  /* Rounded corners for the box */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  /* Add a subtle shadow effect */
+            margin-top: 20px;  /* Space above the message */
+            display: block;  /* Make sure it displays when shown */
+            }
+
+    </style>
+</head>
+<body>
+    <!-- Tablet Container -->
+    <div class="tablet">
+
+        <!-- Background Image -->
+    <div class="tablet-background"></div>
+
+        <!-- Camera -->
+        <div class="camera"></div>
+
+        <!-- Timer and Score Display -->
+        <div class="top-bar">
+            <div class="timer">⏳ <span id="timer">20</span>s</div>
+        </div>
+
+        <!-- Score Section -->
+        <div class="score" id="player1Score">🏁 Player 1 Score: 0</div>
+        <div class="score" id="player2Score">🏁 Player 2 Score: 0</div>
+
+        <!-- Encrypted Message -->
+        <div class="message-title">ENCRYPTED MESSAGE</div>
+        <div class="encrypted-message" id="encryptedMessage">E000</div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <input type="text" id="userInput" placeholder="Enter your decoded answer">
+            <button id="submitBtn">Submit</button>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="feedback" id="feedback"></div>
+
+        <!-- Hint Icon and Hint -->
+        <div class="hint-icon" id="hintIcon">💡</div>
+        <div class="hint" id="hintMessage" style="display:none;">
+            <!-- The hint will be displayed dynamically -->
+        </div>
+
+        <!-- Player Turn Display -->
+        <div id="playerTurn" class="player-turn">Player 1's Turn</div>
+
+        <!-- Winner Message -->
+        <div id="winnerMessage" style="display: none;">🏆 Congrats! Player <span id="winner"></span> Wins!</div>
+
+        <!-- Bottom Bezel -->
+        <div class="bezel-bottom"></div>
+
+        <!-- Center Bottom Section -->
+        <div class="bottom-bar">
+            <!-- Back and Restart Buttons -->
+            <div class="bottom-btn" id="backBtn" onclick="window.location.href='home.html'">⬅</div>
+            <div class="bottom-btn" id="restartBtn" onclick="restartGame()">🔄</div>
+            <!-- GO Button for Starting the Game -->
+            <div class="bottom-btn" id="goBtn" onclick="startGame()">GO</div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const userInput = document.getElementById('userInput');
+        const feedback = document.getElementById('feedback');
+        const hintIcon = document.getElementById('hintIcon');
+        const hintMessage = document.getElementById('hintMessage');
+        const encryptedMessage = document.getElementById('encryptedMessage');
+        const player1ScoreElement = document.getElementById('player1Score');
+        const player2ScoreElement = document.getElementById('player2Score');
+        const timerElement = document.getElementById('timer');
+        const goBtn = document.getElementById('goBtn');
+        const playerTurn = document.getElementById('playerTurn');
+        const winnerMessage = document.getElementById('winnerMessage');
+        const winner = document.getElementById('winner');
+
+        // New Encrypted Messages and Decoded Answers
+        const messages = [
+            { 
+                message: "FDHVDU", 
+                answer: "CAESAR", 
+                hint: "A famous cipher.\nC_ _ _ _ _" 
+            },
+            { 
+                message: "WHDFK", 
+                answer: "TEACH", 
+                hint: "What teachers do.\n_ E_ _ H" 
+            },
+            { 
+                message: "GRJ", 
+                answer: "DOG", 
+                hint: "A loyal animal.\n_ O _" 
+            },
+            { 
+                message: "KDSSB", 
+                answer: "HAPPY", 
+                hint: "A cheerful feeling.\nH_ _ _ Y" 
+            },
+            { 
+                message: "VWRUP", 
+                answer: "STORM", 
+                hint: "Heavy rain with thunder.\n_ T_ _ M" 
+            },
+            { 
+                message: "SODQH", 
+                answer: "PLANE", 
+                hint: "Flies in the sky.\nP_ _ _ E" 
+            },
+            { 
+                message: "FKDLU", 
+                answer: "CHAIR", 
+                hint: "You sit on it.\nC_ _ _ _" 
+            },
+            { 
+                message: "ERRN", 
+                answer: "BOOK", 
+                hint: "You read it.\n_ _ O _" 
+            },
+            { 
+                message: "VKLS", 
+                answer: "SHIP", 
+                hint: "Travels on water.\n_ _ I P" 
+            },
+            { 
+                message: "OLRQ", 
+                answer: "LION", 
+                hint: "The king of the jungle.\n_ I _ _" 
+            },
+            { 
+                message: "EUHDG", 
+                answer: "BREAD", 
+                hint: "A common breakfast item.\n_ R _ _ D" 
+            },
+            { 
+                message: "FDQG\y", 
+                answer: "CANDY", 
+                hint: "A sweet treat.\nC_ _ _ Y" 
+            },
+            { 
+                message: "QDWXUH", 
+                answer: "NATURE", 
+                hint: "The outdoors and wildlife.\nN_ _ _ _ E" 
+            },
+            { 
+                message: "FRGH", 
+                answer: "CODE", 
+                hint: "A programmer writes this.\nC_ _ E" 
+            },
+            { 
+                message: "FDU", 
+                answer: "CAR", 
+                hint: "A four-wheeled vehicle.\nC _ _" 
+            },
+            { 
+                message: "FLQG", 
+                answer: "KING", 
+                hint: "A royal leader.\n_ I _ _" 
+            },
+            { 
+                message: "KHDUW", 
+                answer: "HEART", 
+                hint: "Pumps blood in your body.\n_ E_ _ T" 
+            },
+            { 
+                message: "DQLPDO", 
+                answer: "ANIMAL", 
+                hint: "Cats, dogs, and lions, for example.\n_ N_ _ _ _" 
+            },
+            { 
+                message: "SDSHU", 
+                answer: "PAPER", 
+                hint: "Used for writing or printing.\n_ A_ _ R" 
+            },
+            { 
+                message: "WDEOH", 
+                answer: "TABLE", 
+                hint: "You dine on it.\nT_ _ _ E" 
+            },
+            { 
+                message: "SRLQW", 
+                answer: "POINT", 
+                hint: "A dot or marker.\n_ _ I_ T" 
+            },
+            { 
+                message: "FORFN", 
+                answer: "CLOCK", 
+                hint: "It tells the time.\nC _ _ _ _" 
+            },
+            { 
+                message: "BRX", 
+                answer: "YOU", 
+                hint: "Refers to the person reading this.\n_ O _" 
+            },
+            { 
+                message: "KRPH", 
+                answer: "HOME", 
+                hint: "A place to live.\nH _ _ E" 
+            },
+            { 
+                message: "WRRO", 
+                answer: "TOOL", 
+                hint: "Used for fixing or building things.\nT_ _ _" 
+            },
+            { 
+                message: "F\SKHU", 
+                answer: "CIPHER", 
+                hint: "A secret way of writing.\n_ I_ _ E_"
+            },
+            { 
+                message: "KDVWH", 
+                answer: "HASTE", 
+                hint: "Hurry or rush.\nH_ _ T_"
+            },
+            { 
+                message: "FRGHU", 
+                answer: "CODER", 
+                hint: "A programmer.\nC_ _ _ R" 
+            },
+            { 
+                message: "SULQWHU", 
+                answer: "PRINTER", 
+                hint: "Produces hard copies of documents.\nP_ _ _ T_ _ _" 
+            },
+            { 
+                message: "ZLQWHU", 
+                answer: "WINTER", 
+                hint: "The coldest season.\n_ I_ _ _ R" 
+            },
+            { 
+                message: "FLUFNLQJ", 
+                answer: "CLICKING", 
+                hint: "Pressing a button on a mouse.\nC_ _ C_ _ N_" 
+            },
+            { 
+                message: "JODVVHV", 
+                answer: "GLASSES", 
+                hint: "Worn to improve vision.\n_ L_ _ S_ _" 
+            },
+            { 
+                message: "MDFNHW", 
+                answer: "JACKET", 
+                hint: "Worn to keep warm.\n_ A_ _ _ T" 
+            },
+            { 
+                message: "WUXFN", 
+                answer: "TRUCK", 
+                hint: "A large vehicle for goods.\n_ R_ _ K" 
+            },
+            { 
+                message: "FRPSXWHU", 
+                answer: "COMPUTER", 
+                hint: "An essential tech device.\nC_ _ P_ T_ _ _" 
+            },
+            { 
+                message: "VLVWHP", 
+                answer: "SYSTEM", 
+                hint: "A structured framework or setup.\nS_ _ _ _ M" 
+            },
+            { 
+                message: "ZRUOG", 
+                answer: "WORLD", 
+                hint: "Our planet.\n_ O_ _ D" 
+            },
+            { 
+                message: "ELUGV", 
+                answer: "BIRDS", 
+                hint: "Animals that fly.\nB_ _ D_" 
+            },
+            { 
+                message: "OLJKW", 
+                answer: "LIGHT", 
+                hint: "Illuminates darkness.\nL_ _ H_" 
+            },
+            { 
+                message: "ULYHU", 
+                answer: "RIVER", 
+                hint: "A flowing body of water.\nR_ _ _ R" 
+            },
+            { 
+                message: "VWRQH", 
+                answer: "STONE", 
+                hint: "A small rock.\nS_ _ _ E" 
+            },
+            { 
+                message: "EULFN", 
+                answer: "BRICK", 
+                hint: "Used for building.\n_ R_ C_ " 
+            },
+            { 
+                message: "EODQNHW", 
+                answer: "BLANKET", 
+                hint: "Keeps you warm at night.\n_ L_ _ K_ _" 
+            },
+            { 
+                message: "PXVLQJ", 
+                answer: "MUSING", 
+                hint: "A deep thought or reflection.\n_ U_ _ N_"
+            },
+            { 
+                message: "TXHVWLRQ", 
+                answer: "QUESTION", 
+                hint: "What you ask to get an answer.\nQ_ _ S_ _ _ N" 
+            },
+            { 
+                message: "HQMR\V", 
+                answer: "ENJOYS", 
+                hint: "Takes pleasure in something.\n_ N_ _ _ S" 
+            },
+            { 
+                message: "FRQWUDVW", 
+                answer: "CONTRAST", 
+                hint: "Shows differences.\nC_ _ T_ _ S_" 
+            },
+            { 
+                message: "FRORUV", 
+                answer: "COLORS", 
+                hint: "Red, green, blue, etc.\nC_ _ _ R_" 
+            }
+        ];
+
+        let player1Score = 0;
+        let player2Score = 0;
+        let currentPlayer = 1; // Player 1 starts
+        let timer = 20; // Set timer to 10 seconds for each player
+        let timerInterval;
+        let currentMessage;
+        let gameStarted = false;
+
+        // Randomly Select New Message
+        function randomMessage() {
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            return messages[randomIndex];
+        }
+
+        // Timer Countdown
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timer > 0) {
+                    timer--;
+                    timerElement.textContent = timer;
+                } else {
+                    clearInterval(timerInterval);
+                    feedback.textContent = `Player ${currentPlayer} Time’s up!`;
+                    feedback.classList.add('incorrect');
+                    switchPlayer(); // Automatically switch player when time is up
+                }
+            }, 1000);
+        }
+
+        // Initialize the game when "Go" is clicked
+        function startGame() {
+            if (!gameStarted) gameStarted = true; // Start the game only once
+
+            if (currentPlayer === 1) {
+                goBtn.disabled = true; // Disable "GO" button once clicked for Player 1
+                currentMessage = randomMessage(); // Get a random encrypted message
+                encryptedMessage.textContent = currentMessage.message;
+                hintMessage.textContent = currentMessage.hint; // Set the hint for the current message
+                hintMessage.style.display = 'none'; // Hide hint initially
+                startTimer();  // Start the timer for Player 1
+                playerTurn.textContent = `Player 1's Turn`; // Display the current player's turn
+            } else if (currentPlayer === 2) {
+                goBtn.disabled = true; // Disable "GO" button once clicked for Player 2
+                currentMessage = randomMessage(); // Get a new random message for Player 2
+                encryptedMessage.textContent = currentMessage.message;
+                hintMessage.textContent = currentMessage.hint;
+                hintMessage.style.display = 'none'; // Hide hint initially
+                startTimer();  // Start the timer for Player 2
+                playerTurn.textContent = `Player 2's Turn`;
+            }
+        }
+
+        // Switch between players when time is up or they finish
+        function switchPlayer() {
+            if (currentPlayer === 1) {
+                // After Player 1 finishes, switch to Player 2
+                currentPlayer = 2;
+                timer = 20;
+                timerElement.textContent = timer;
+                playerTurn.textContent = `Player 2's Turn`; // Update the player turn display
+                // Enable GO button for Player 2 to start their turn
+                goBtn.disabled = false;
+                encryptedMessage.textContent = "E000"; // Placeholder message
+                hintMessage.textContent = "New encrypted message."; // Placeholder hint
+                userInput.value = ''; // Clear input
+                feedback.textContent = ''; // Clear feedback
+                hintMessage.style.display = 'none'; // Hide hint
+            } else {
+                // Game ends after Player 2 finishes
+                determineWinner();
+            }
+        }
+
+        // Restart the game
+        function restartGame() {
+            player1Score = 0;
+            player2Score = 0;
+            player1ScoreElement.textContent = `🏁 Player 1 Score: 0`;
+            player2ScoreElement.textContent = `🏁 Player 2 Score: 0`;
+            feedback.textContent = '';
+            timer = 20;
+            timerElement.textContent = timer;
+            goBtn.disabled = false; // Enable "Go" button for Player 1
+            winnerMessage.style.display = 'none'; // Hide winner message at the start of the new game
+            currentPlayer = 1; // Reset to Player 1 starting
+            gameStarted = false; // Reset game state
+
+            // Enable input and buttons for restart
+            userInput.disabled = false;
+            submitBtn.disabled = false;
+        }
+
+        // Disable inputs after the game ends
+        function disableInputs() {
+            userInput.disabled = true;
+            submitBtn.disabled = true;
+        }
+
+        // Determine the winner based on score
+        function determineWinner() {
+            if (player1Score > player2Score) {
+                winner.textContent = "Player 1";
+            } else if (player2Score > player1Score) {
+                winner.textContent = "Player 2";
+            } else {
+                winner.textContent = "It's a tie!";
+            }
+            winnerMessage.style.display = 'block'; // Show winner message
+
+            // Disable inputs after Player 2 finishes
+            disableInputs();
+        }
+
+        // Submit Answer
+        submitBtn.addEventListener('click', () => {
+            const userAnswer = userInput.value.trim().toUpperCase();  // Ensure input is trimmed and uppercase
+            if (userAnswer === currentMessage.answer) {
+                if (currentPlayer === 1) {
+                    player1Score++;
+                    player1ScoreElement.textContent = `🏁 Player 1 Score: ${player1Score}`;
+                } else {
+                    player2Score++;
+                    player2ScoreElement.textContent = `🏁 Player 2 Score: ${player2Score}`;
+                }
+                feedback.textContent = `Correct!`;
+                feedback.classList.remove('incorrect');
+                feedback.classList.add('correct');
+                hintMessage.style.display = 'none';  // Hide the hint after answering
+
+                // Automatically load next question for the same player
+                currentMessage = randomMessage(); // Get a new random encrypted message
+                encryptedMessage.textContent = currentMessage.message;
+                hintMessage.textContent = currentMessage.hint; // Set new hint
+                userInput.value = ''; // Clear the input after the answer is submitted
+            } else {
+                feedback.textContent = `Incorrect!`;
+                feedback.classList.add('incorrect');
+            }
+        });
+
+        // Show hint
+        hintIcon.addEventListener('click', () => {
+            if (hintMessage.style.display === 'none') {
+                hintMessage.style.display = 'block';
+            } else {
+                hintMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

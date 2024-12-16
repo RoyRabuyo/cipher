@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt Race - Home</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Body and Background */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to top, #98D37E, #C1E2A6);
+        }
+
+        /* Tablet Background Image */
+        .tablet-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('bg2.jpg'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            z-index: -1; /* Ensures it stays behind other content */
+            border-radius: 38px; /* Matches the inner tablet curve */
+        }
+
+
+        /* Tablet Container with Rounded Style */
+        .tablet {
+            width: 400px;
+            height: 680px;
+            border: 12px solid #333;
+            border-radius: 50px; /* Rounded corners */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5),
+                        inset 0 5px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Simulated Camera (Top Center) */
+        .camera {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background-color: #555;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header (Game Title) */
+        .header {
+            text-align: center;
+            margin-top: 100px;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #333;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Start Button */
+        .start-btn {
+            display: block;
+            margin: 230px auto 0;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            background: #FFAE42;
+            border: 3px solid #E68A00;
+            border-radius: 25px; /* Rounded */
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.2s, background 0.3s;
+            width: 200px;
+        }
+
+        .start-btn:hover {
+            background: #E68A00;
+            transform: scale(1.05);
+        }
+
+        /* Choices (Centered Buttons) */
+        .choices {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .choices button {
+            margin: 15px 0;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: #FFAE42;
+            border: 2px solid #E68A00;
+            border-radius: 25px; /* Rounded */
+            cursor: pointer;
+            width: 200px; /* Same width for both buttons */
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .choices button:hover {
+            background: #E68A00;
+            transform: scale(1.05);
+        }
+
+        /* Bottom Bezel (Fake Button Indicator) */
+        .bezel-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 5px;
+            background: #555;
+            border-radius: 5px;
+        }
+
+        /* Center Bottom Section (Back, Restart Buttons) */
+        .bottom-bar {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            top: 60%;
+        }
+
+        .bottom-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .bottom-btn:hover {
+            color: #E68A00;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tablet Container -->
+    <div class="tablet">
+
+        <!-- Background Image -->
+    <div class="tablet-background"></div>
+
+        <!-- Camera -->
+        <div class="camera"></div>
+
+        <!-- Header / Game Title -->
+        <div class="header">
+            Decrypt Race
+        </div>
+
+        <!-- Start Button -->
+        <button class="start-btn" id="startButton">START</button>
+
+        <!-- Choices (Centered Buttons) -->
+        <div class="choices" id="choices">
+            <button onclick="window.location.href='single.html'">1 PLAYER</button>
+            <button onclick="window.location.href='multiplayer.html'">2 PLAYERS</button>
+        </div>
+
+        <!-- Bottom Fake Button (Bezel) -->
+        <div class="bezel-bottom"></div>
+    </div>
+
+    <div class="bottom-bar">
+        <!-- Back and Restart Buttons -->
+        <div class="bottom-btn" id="backBtn" onclick="window.location.href='home.html'">⬅</div>
+    </div>
+
+</div>
+
+    <!-- JavaScript -->
+    <script>
+        // Handle the "START" button click
+        document.getElementById("startButton").addEventListener("click", function() {
+            document.getElementById("startButton").style.display = "none"; // Hide START button
+            document.getElementById("choices").style.display = "block";    // Show choices
+        });
+    </script>
+</body>
+</html>
